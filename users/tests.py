@@ -11,7 +11,7 @@ class UserTestCase(APITestCase):
 
     def setUp(self):
         self.user = User.objects.create_user(
-            email="testuser@example.com", password="testpassword", username="test_user"
+            email="testuser@example.com", password="testpassword", username="test_user", telegram_chat_id="12340"
         )
         self.habit = Habit.objects.create(
             action="Пить воду",
@@ -25,11 +25,12 @@ class UserTestCase(APITestCase):
 
     def test_create_user(self):
         """Тест для создания пользователя"""
-        url = reverse("users:user-register")
+        url = reverse("users:register")
         data = {
             "email": "newuser@example.com",
             "password": "newpassword",
             "username": "newuser",
+            "telegram_chat_id":"1234500"
         }
         response = self.client.post(url, data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)

@@ -11,9 +11,12 @@ class HabitViewSetTest(APITestCase):
             username="testuser", email="testuser@mail.ru", password="testpass"
         )
         self.client.login(email="testuser@mail.ru", password="testpass")
-        self.url = reverse("habit-list")
+        self.url = reverse("users:user_habits")
+
+        self.client.force_authenticate(user=self.user)
 
     def test_create_habit(self):
+        """Тест для создания привычки"""
         data = {
             "action": "Пить воду",
             "place": "Дом",
@@ -21,10 +24,22 @@ class HabitViewSetTest(APITestCase):
             "frequency": 7,
             "time_to_complete": "00:05:00",
         }
-        response = self.client.post(self.url, data)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        habit_create_url = reverse("habit_tracker:habit-create")
+        response = self.client.post(habit_create_url, data=data)
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_201_CREATED,
+        )
+        print(response.json())
+
+        self.assertEqual(response.json().get("name"), data.get("name"))
+
+        self.assertTrue(Habit.objects.get(pk=self.habit.pk).name, data.get("name"))
 
     def test_list_habits(self):
+        url = reverse("users:user_habits")
         Habit.objects.create(
             action="Пить воду",
             place="Дом",
@@ -33,6 +48,9 @@ class HabitViewSetTest(APITestCase):
             time_to_complete="00:05:00",
             user=self.user,
         )
-        response = self.client.get(self.url)
+
+        print(url)
+        response = self.client.get(url)
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
+        self.assertEqual(len(response.data), 4)

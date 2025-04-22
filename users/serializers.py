@@ -1,5 +1,7 @@
-from rest_framework import serializers
+from rest_framework import serializers, views, status
 from users.models import User
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework.response import Response
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -14,6 +16,7 @@ class UserSerializer(serializers.ModelSerializer):
             "user_country",
             "user_photo",
             "password",
+            "telegram_chat_id",
         ]
         extra_kwargs = {"password": {"write_only": True}}
 
@@ -29,4 +32,18 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["phone_number", "user_country", "user_photo"]
+        fields = ["phone_number", "user_country", "user_photo", 'telegram_chat_id']
+
+
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+    """Сериализатор для получения токена"""
+
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+
+        # Добавление пользовательских полей в токен
+        token["username"] = user.username
+        token["email"] = user.email
+
+        return token
