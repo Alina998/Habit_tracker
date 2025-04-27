@@ -27,6 +27,7 @@ class User(AbstractUser):
         verbose_name="Фото",
         help_text="Загрузите фото",
     )
+    telegram_profile = models.CharField(max_length=20, verbose_name='Ник в Telegram', blank=True, null=True)
     telegram_chat_id = models.CharField(
         max_length=100,
         blank=True,

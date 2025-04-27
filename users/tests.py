@@ -13,6 +13,7 @@ class UserTestCase(APITestCase):
             email="testuser@example.com",
             password="testpassword",
             username="test_user",
+            telegram_profile="TGnik",
             telegram_chat_id="12340",
         )
         self.habit = Habit.objects.create(
@@ -31,6 +32,7 @@ class UserTestCase(APITestCase):
             "email": "newuser@example.com",
             "password": "newpassword",
             "username": "newuser",
+            "telegram_profile": "TGnik1",
             "telegram_chat_id": "1234500",
         }
         response = self.client.post(url, data)

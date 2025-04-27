@@ -15,6 +15,7 @@ class UserSerializer(serializers.ModelSerializer):
             "user_country",
             "user_photo",
             "password",
+            "telegram_profile",
             "telegram_chat_id",
         ]
         extra_kwargs = {"password": {"write_only": True}}

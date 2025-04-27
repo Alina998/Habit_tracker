@@ -19,44 +19,48 @@ def send_tg_message():
     time_now = datetime.now()
     start_time = time_now - timedelta(minutes=10)
     finish_time = time_now + timedelta(minutes=10)
-    habits = Habit.objects.filter(time__gte=start_time).filter(time__lte=finish_time)
+    habits = Habit.objects.filter(time__gte=start_time, time__lte=finish_time)
 
     for habit in habits:
         action = habit.action
         place = habit.place
         time = habit.time
-        time_complete = habit.time_complete
-        user_tg = habit.user.telegram
+        time_to_complete = habit.time_to_complete
+        user = habit.user
 
-        updates = get_updates()
-        if updates["ok"]:
-            parser_updates(updates["result"])
-
-        chat_id = User.objects.get(telegram=user_tg).chat_id
+        # Получаем chat_id из профиля пользователя
+        chat_id = user.telegram_chat_id
 
         text = (
-            f"Привычка {action} "
+            f"Я буду {action} "
+            f"в {time} "
             f"в {place} "
-            f"должна выполняться {time} "
-            f"на протяжении {time_complete}"
+            f"в течение {time_to_complete}"
         )
-        send_message(text, chat_id)
 
+        # Отправляем сообщение только если chat_id существует
+        if chat_id:
+            send_message(text, chat_id)
+
+        # Обновляем время привычки
         habit.time += timedelta(days=habit.frequency)
         habit.save()
 
 
 def get_updates():
     """Получаем CHAT_ID"""
-
     response = requests.get(f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/getUpdates")
     return response.json()
 
 
 def parser_updates(updates):
     for update in updates:
-        user = User.objects.get(telegram=update["message"]["chat"]["username"])
-        if User.objects.filter(telegram=user).exist():
-            user.chat_id = update["message"]["chat"]["id"]
-            user.update_id = update["update_id"]
-            user.save()
+        if "message" in update and "chat" in update["message"]:
+            chat_username = update["message"]["chat"].get("username")
+            if chat_username:
+                try:
+                    user = User.objects.get(telegram_profile=chat_username)
+                    user.telegram_chat_id = update["message"]["chat"]["id"]
+                    user.save()
+                except User.DoesNotExist:
+                    continue

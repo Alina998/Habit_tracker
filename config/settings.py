@@ -150,7 +150,6 @@ CACHES = {
 # Настройки для подключения к телеграм-боту
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 
-
 CORS_ALLOWED_ORIGINS = [
     "https://*",  # Замените на адрес вашего фронтенд-сервера
 ]

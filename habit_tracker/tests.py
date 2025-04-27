@@ -11,7 +11,7 @@ class HabitTestCase(APITestCase):
     def setUp(self):
         """Создаем пользователя для теста"""
         self.user = User.objects.create_user(
-            username="testuser", email="testuser@mail.ru", password="testpass"
+            username="testuser", email="testuser@mail.ru", password="testpass", telegram_profile="TGnik",
         )
 
         """Авторизация"""
