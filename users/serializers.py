@@ -1,7 +1,6 @@
 from rest_framework import serializers, views, status
 from users.models import User
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from rest_framework.response import Response
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -32,7 +31,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["phone_number", "user_country", "user_photo", 'telegram_chat_id']
+        fields = ["phone_number", "user_country", "user_photo", "telegram_chat_id"]
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):

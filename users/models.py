@@ -28,7 +28,10 @@ class User(AbstractUser):
         help_text="Загрузите фото",
     )
     telegram_chat_id = models.CharField(
-        max_length=100, blank=True, null=True, verbose_name="Уникальный идентификатор чата"
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name="Уникальный идентификатор чата",
     )
 
     USERNAME_FIELD = "email"
