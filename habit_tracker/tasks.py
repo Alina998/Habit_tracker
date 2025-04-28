@@ -1,29 +1,66 @@
 from celery import shared_task
-from django.utils import timezone
 import requests
 from habit_tracker.models import Habit
 from config.settings import TELEGRAM_TOKEN
+from datetime import datetime, timedelta
+from users.models import User
+
+
+def send_message(text, chat_id):
+    requests.post(
+        url=f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage",
+        data={"chat_id": chat_id, "text": text},
+    )
 
 
 @shared_task
-def check_habits():
-    now = timezone.now()
-    current_time = now.time()
+def send_tg_message():
+    """Отправка сообщения в Telegram"""
+    time_now = datetime.now()
+    start_time = time_now - timedelta(minutes=10)
+    finish_time = time_now + timedelta(minutes=10)
+    habits = Habit.objects.filter(time__gte=start_time, time__lte=finish_time)
 
-    # Получаем все привычки для текущего дня
-    habits_to_remind = Habit.objects.filter(time=current_time, user__is_active=True)
+    for habit in habits:
+        action = habit.action
+        place = habit.place
+        time = habit.time
+        time_to_complete = habit.time_to_complete
+        user = habit.user
 
-    for habit in habits_to_remind:
-        chat_id = habit.user.profile.telegram_chat_id
-        message = f"Время выполнять привычку: {habit.action} в {habit.place}!"
+        # Получаем chat_id из профиля пользователя
+        chat_id = user.telegram_chat_id
 
-        send_telegram_notification.delay(chat_id, message)
+        text = (
+            f"Я буду {action} "
+            f"в {time} "
+            f"в {place} "
+            f"в течение {time_to_complete}"
+        )
+
+        # Отправляем сообщение только если chat_id существует
+        if chat_id:
+            send_message(text, chat_id)
+
+        # Обновляем время привычки
+        habit.time += timedelta(days=habit.frequency)
+        habit.save()
 
 
-@shared_task
-def send_telegram_notification(chat_id, message):
-    TOKEN = TELEGRAM_TOKEN
-    url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
-    payload = {"chat_id": chat_id, "text": message, "parse_mode": "HTML"}
-    response = requests.post(url, json=payload)
+def get_updates():
+    """Получаем CHAT_ID"""
+    response = requests.get(f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/getUpdates")
     return response.json()
+
+
+def parser_updates(updates):
+    for update in updates:
+        if "message" in update and "chat" in update["message"]:
+            chat_username = update["message"]["chat"].get("username")
+            if chat_username:
+                try:
+                    user = User.objects.get(telegram_profile=chat_username)
+                    user.telegram_chat_id = update["message"]["chat"]["id"]
+                    user.save()
+                except User.DoesNotExist:
+                    continue

@@ -1,7 +1,9 @@
-from rest_framework import generics, permissions
+from rest_framework import generics
 from users.models import User
-from users.serializers import UserSerializer
-from habit_tracker.models import Habit
+from users.serializers import UserSerializer, MyTokenObtainPairSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from users.permissions import IsModerator, IsOwner
 
 
 class UserRegistrationView(generics.CreateAPIView):
@@ -9,44 +11,40 @@ class UserRegistrationView(generics.CreateAPIView):
 
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [permissions.AllowAny]  # Доступно для всех
+    permission_classes = [AllowAny]  # Доступно для всех
 
 
-class UserLoginView(generics.GenericAPIView):
-    """Представление для аутентификации пользователя"""
-
-    permission_classes = [permissions.AllowAny]
-
-    def post(self, request):
-        username = request.data.get("username")
-        password = request.data.get("password")
-
-
-class UserHabitListView(generics.ListCreateAPIView):
-    """Представление для просмотра привычек пользователя"""
-
+class UserListAPIView(generics.ListAPIView):
     serializer_class = UserSerializer
+    queryset = User.objects.all()
+    permission_classes = [IsAuthenticated, IsModerator]
+
+
+class UserRetrieveAPIView(generics.RetrieveAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated, IsOwner]
 
     def get_queryset(self):
-        return Habit.objects.filter(user=self.request.user)
+        return User.objects.filter(id=self.request.user.id)
 
 
-class PublicHabitListView(generics.ListAPIView):
-    """Представление для просмотра публичных привычек"""
-
+class UserUpdateAPIView(generics.UpdateAPIView):
+    queryset = User.objects.all()
     serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated, IsOwner]
 
     def get_queryset(self):
-        return Habit.objects.filter(is_public=True)
+        return User.objects.filter(id=self.request.user.id)
 
 
-class HabitDetailView(generics.RetrieveUpdateDestroyAPIView):
-    """Представление для просмотра деталей привычки"""
-
+class UserDestroyAPIView(generics.DestroyAPIView):
+    queryset = User.objects.all()
     serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated, IsOwner]
 
     def get_queryset(self):
-        return Habit.objects.filter(user=self.request.user)
+        return User.objects.filter(id=self.request.user.id)
 
 
 class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -54,8 +52,14 @@ class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsOwner]
 
     def get_object(self):
         # Позволяет пользователям видеть и редактировать только свои данные
         return self.request.user
+
+
+class MyTokenObtainPairView(TokenObtainPairView):
+    """Представление для получения токена"""
+
+    serializer_class = MyTokenObtainPairSerializer
