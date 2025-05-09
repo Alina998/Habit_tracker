@@ -20,7 +20,7 @@ services:
         condition: service_healthy
     environment:
       - DEBUG=True
-      - DATABASE_HOST=db
+      - HOST=db
 
   db:
     image: postgres:16.0
@@ -40,13 +40,13 @@ services:
 
   celery:
     build: .
-    command: celery -A habit_tracker worker --loglevel=info
+    command: celery -A config worker --loglevel=info
     env_file:
       - .env
 
   celery-beat:
     build: .
-    command: celery -A habit_tracker beat --loglevel=info
+    command: celery -A config beat --loglevel=info
     env_file:
       - .env
 
