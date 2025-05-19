@@ -1,10 +1,20 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from habit_tracker.views import HabitViewSet
+from django.urls import path
+from habit_tracker.views import (
+    HabitCreateAPIView,
+    HabitListAPIView,
+    HabitRetrieveAPIView,
+    HabitUpdateAPIView,
+    HabitDestroyAPIView,
+    PublicHabitListAPIView,
+)
 
-router = DefaultRouter()
-router.register(r"habits", HabitViewSet)
+app_name = "habit_tracker"
 
 urlpatterns = [
-    path("", include(router.urls)),
+    path("create/", HabitCreateAPIView.as_view(), name="habit_create"),
+    path("", HabitListAPIView.as_view(), name="user_habits"),
+    path("<int:pk>/", HabitRetrieveAPIView.as_view(), name="habit"),
+    path("update/<int:pk>/", HabitUpdateAPIView.as_view(), name="habit_update"),
+    path("delete/<int:pk>/", HabitDestroyAPIView.as_view(), name="habit_delete"),
+    path("public/", PublicHabitListAPIView.as_view(), name="habit_public"),
 ]

@@ -1,5 +1,5 @@
 from pathlib import Path
-import os
+import os, sys
 from dotenv import load_dotenv
 from datetime import timedelta
 
@@ -29,6 +29,8 @@ INSTALLED_APPS = [
     "rest_framework",
     "corsheaders",
     "drf_yasg",
+    "rest_framework_simplejwt",
+    "django_filters",
 ]
 
 MIDDLEWARE = [
@@ -129,14 +131,14 @@ CELERY_TASK_TIME_LIMIT = 30 * 60
 
 
 # Настройки для Celery
-# CELERY_BEAT_SCHEDULE = {
-#     "task-name": {
-#         "task": "habit_tracker.tasks.send_telegram_notification"  # Путь к задаче
-#         # "schedule": timedelta(
-#         #     minutes=10
-#         # ),  # Расписание выполнения задачи (например, каждые 10 минут)
-#     },
-# }
+CELERY_BEAT_SCHEDULE = {
+    "task-name": {
+        "task": "habit_tracker.tasks.send_tg_message",  # Путь к задаче
+        "schedule": timedelta(
+            minutes=10
+        ),  # Расписание выполнения задачи (например, каждые 10 минут)
+    },
+}
 
 CACHES = {
     "default": {
@@ -158,3 +160,26 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 CORS_ALLOW_ALL_ORIGINS = False
+
+# Настройки JWT-токенов
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ],
+    "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
+}
+
+# Настройки срока действия токенов
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+}
+
+
+if 'test' in sys.argv:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'test_db.sqlite3',
+        }
+    }
